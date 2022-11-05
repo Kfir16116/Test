@@ -119,6 +119,7 @@ def door(x,y):
 class cube:
     def __init__(self,x,y):
         self.cube_picked = ""
+        self.held = False
         self.cube_x, self.cube_y = x,y
         self.cube_rect = pygame.Rect(x,y,50,50)
     def update(self,key):
@@ -132,10 +133,18 @@ class cube:
 
         if player1_rect.colliderect(self.cube_rect):
             if key[pygame.K_f]:
-                self.cube_picked = "p1"
+                if not self.held:
+                    self.cube_picked = "p1"
+                if self.held:
+                    self.cube_picked = ""
+                self.held = not(self.held)
         if player2_rect.colliderect(self.cube_rect):
-            if key[pygame.K_SLASH]:
-                self.cube_picked = "p2"
+            if key[pygame.K_CTRL]:
+                if not self.held:
+                    self.cube_picked = "p2"
+                if self.held:
+                    self.cube_picked = ""
+                self.held = not(self.held)
         print(self.cube_picked)
 
 
