@@ -1,6 +1,5 @@
 from pygame.locals import *
-import pygame
-import sys
+import pygame, sys, time
 
 pygame.init()
 
@@ -92,9 +91,10 @@ def button(x,y):
 
 door_open = False
 door_close_img = pygame.image.load("Images/door_closed.png").convert_alpha()
+door_close_img = pygame.transform.scale(door_close_img, (door_close_img.get_width()/2, door_close_img.get_height()/2))
 door_close_img.set_colorkey(door_close_img.get_at((0,0)))
-door_close_img.
 door_open_img = pygame.image.load("Images/door_opened.png").convert_alpha()
+door_open_img = pygame.transform.scale(door_open_img, (door_open_img.get_width()/2, door_open_img.get_height()/2))
 door_open_img.set_colorkey(door_close_img.get_at((0,0)))
 def door(x,y):
     global door_open, level
@@ -116,13 +116,19 @@ def door(x,y):
         if door_open:
             level = 2
 
+#player1_cube_pick_timer = False
+#player2_cube_pick_timer = False
+player1_cube_pick_timer_value = 0
+player2_cube_pick_timer_value = 0
 class cube:
     def __init__(self,x,y):
         self.cube_picked = ""
-        self.held = False
         self.cube_x, self.cube_y = x,y
         self.cube_rect = pygame.Rect(x,y,50,50)
     def update(self,key):
+        global player1_cube_pick_timer, player2_cube_pick_timer
+        global player1_cube_pick_timer_value, player2_cube_pick_timer_value
+
         if self.cube_picked == "p1":
             self.cube_rect = pygame.Rect(player1_rect.x,player1_rect.y, 50, 50)
         elif self.cube_picked == "p2":
@@ -132,28 +138,24 @@ class cube:
         pygame.draw.rect(screen, (50,50,50), self.cube_rect)
 
         if player1_rect.colliderect(self.cube_rect):
-            if key[pygame.K_f]:
-                if not self.held:
-                    self.cube_picked = "p1"
-                if self.held:
-                    self.cube_picked = ""
-                self.held = not(self.held)
+            if pygame.KEYDOWN:
+                if key[pygame.K_f]:
+                    if not self.cube_picked == "p1":
+                        self.cube_picked = "p1"
+                    else:
+                        self.cube_x, self.cube_y = player1_rect.x, player1_rect.y
+                        self.cube_picked = ""
         if player2_rect.colliderect(self.cube_rect):
-            if key[pygame.K_CTRL]:
-                if not self.held:
-                    self.cube_picked = "p2"
-                if self.held:
-                    self.cube_picked = ""
-                self.held = not(self.held)
-        print(self.cube_picked)
+            if key[pygame.K_RSHIFT]:
+                self.cube_picked = "p2"
 
 
 level = 1
 cube1 = cube(100,100)
 while True:
     key = pygame.key.get_pressed()
-    mouseClick = pygame.mouse.get_pressed()
-    mousePos = pygame.mouse.get_pos()
+    #mouseClick = pygame.mouse.get_pressed()
+    #mousePos = pygame.mouse.get_pos()
     screen.fill((255, 255, 255))
     for event in pygame.event.get():
         if event.type == QUIT:
@@ -172,6 +174,3 @@ while True:
     fps_display()
     clock.tick(MAX_FPS)
     pygame.display.update()
-
-
-
