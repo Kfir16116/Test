@@ -134,7 +134,7 @@ class cube:
             if key[pygame.K_f]:
                 self.cube_picked = "p1"
         if player2_rect.colliderect(self.cube_rect):
-            if key[pygame.K_RSHIFT]:
+            if key[pygame.K_SLASH]:
                 self.cube_picked = "p2"
         print(self.cube_picked)
 
