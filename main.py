@@ -75,8 +75,9 @@ players = Players()
 
 button_color = (255,0,0)
 button_pressed = False
+button_rect = pygame.Rect(0,0,50,50)
 def button(x,y):
-    global button_color, button_pressed
+    global button_color, button_pressed, button_rect
 
     button_rect = pygame.Rect(x,y,50,50)
     pygame.draw.rect(screen, (button_color), button_rect)
@@ -96,8 +97,16 @@ door_close_img.set_colorkey(door_close_img.get_at((0,0)))
 door_open_img = pygame.image.load("Images/door_opened.png").convert_alpha()
 door_open_img = pygame.transform.scale(door_open_img, (door_open_img.get_width()/2, door_open_img.get_height()/2))
 door_open_img.set_colorkey(door_close_img.get_at((0,0)))
+door_cover_x, door_cover_y = 0,0
+origin_x,origin_y=0,0
+change_cover_loc = False
 def door(x,y):
-    global door_open, level
+    global door_open, level, door_cover_x, door_cover_y, change_cover_loc, origin_x, origin_y
+    origin_x,origin_y=x,y
+    if not change_cover_loc:
+        change_cover_loc=True
+        door_cover_x, door_cover_y = x-18, y
+
     door_rect = pygame.Rect(x,y,door_open_img.get_width(),door_open_img.get_height())
 
     # functionality
@@ -106,18 +115,21 @@ def door(x,y):
     else:
         door_open = False
 
-   # screen.blit(door_open_img, (x, y))
+    screen.blit(door_open_img, (x, y))
+    screen.blit(door_close_img, (door_cover_x, door_cover_y))
     if door_open:
-        screen.blit(door_open_img, (x, y))
+        if door_cover_y > origin_y-250:
+            door_cover_y -= 4
     else:
-        screen.blit(door_close_img, (x,y))
+        if door_cover_y < origin_y:
+            door_cover_y += 4
 
-    if player1_rect.colliderect(door_rect) or player2_rect.colliderect(door_rect):
+    if player1_rect.colliderect(door_rect) and player2_rect.colliderect(door_rect):
         if door_open:
             level = 2
 
-#player1_cube_pick_timer = False
-#player2_cube_pick_timer = False
+player1_cube_pick_timer = False
+player2_cube_pick_timer = False
 player1_cube_pick_timer_value = 0
 player2_cube_pick_timer_value = 0
 class cube:
@@ -126,9 +138,10 @@ class cube:
         self.cube_x, self.cube_y = x,y
         self.cube_rect = pygame.Rect(x,y,50,50)
     def update(self,key):
-        global player1_cube_pick_timer, player2_cube_pick_timer
+        global player1_cube_pick_timer, player2_cube_pick_timer, button_pressed, button_color
         global player1_cube_pick_timer_value, player2_cube_pick_timer_value
 
+        # Rendering Cube
         if self.cube_picked == "p1":
             self.cube_rect = pygame.Rect(player1_rect.x,player1_rect.y, 50, 50)
         elif self.cube_picked == "p2":
@@ -137,17 +150,47 @@ class cube:
             self.cube_rect = pygame.Rect(self.cube_x,self.cube_y,50,50)
         pygame.draw.rect(screen, (50,50,50), self.cube_rect)
 
+        # Pick and Drop
         if player1_rect.colliderect(self.cube_rect):
             if pygame.KEYDOWN:
                 if key[pygame.K_f]:
-                    if not self.cube_picked == "p1":
-                        self.cube_picked = "p1"
-                    else:
-                        self.cube_x, self.cube_y = player1_rect.x, player1_rect.y
-                        self.cube_picked = ""
+                    if not player1_cube_pick_timer:
+                        player1_cube_pick_timer_value = 0
+                        if not self.cube_picked == "p1":
+                            self.cube_picked = "p1"
+                        else:
+                            self.cube_x, self.cube_y = player1_rect.x, player1_rect.y
+                            self.cube_picked = ""
+                    if player1_cube_pick_timer_value < 1:
+                        player1_cube_pick_timer_value = time.time()
+                        player1_cube_pick_timer = True
         if player2_rect.colliderect(self.cube_rect):
-            if key[pygame.K_RSHIFT]:
-                self.cube_picked = "p2"
+            if pygame.KEYDOWN:
+                if key[pygame.K_RSHIFT]:
+                    if not player2_cube_pick_timer:
+                        player2_cube_pick_timer_value = 0
+                        if not self.cube_picked == "p2":
+                            self.cube_picked = "p2"
+                        else:
+                            self.cube_x, self.cube_y = player2_rect.x, player2_rect.y
+                            self.cube_picked = ""
+                    if player2_cube_pick_timer_value < 1:
+                        player2_cube_pick_timer_value = time.time()
+                        player2_cube_pick_timer = True
+
+        # Pick and Drop Timers
+        if player1_cube_pick_timer:
+            if (time.time() - player1_cube_pick_timer_value) > 0.5:
+                player1_cube_pick_timer = False
+        if player2_cube_pick_timer:
+            if (time.time() - player2_cube_pick_timer_value) > 0.5:
+                player2_cube_pick_timer = False
+
+        # button
+        if self.cube_rect.colliderect(button_rect):
+            if self.cube_picked == "":
+                button_pressed=True
+                button_color = (0, 255, 0)
 
 
 level = 1
